@@ -14,14 +14,15 @@ from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 import pickle
 from skopt import BayesSearchCV
+from pathlib import Path
 
 def load_data():
    
     # read data 
-  try:
-    data = pd.read_excel(r'C:\Users\Julien\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None)
-  except: 
-    data = pd.read_excel(r'C:\Users\Mögu\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None) 
+  root_dir = Path(__file__).resolve().parent
+  
+  data = pd.read_excel(f'{root_dir}/data/metadata.xls', header=None)
+  
  
 
   # read data 
@@ -39,13 +40,13 @@ def create_pipeline(classifier):
   steps=[]
   if classifier == 'BaggingClassifier':
     steps = [
-        ('scaler', StandardScaler() if feature_scaling == 1 else None),       # Scale the features
+        ('scaler', StandardScaler()),       # Scale the features
         ('classifier', BaggingClassifier(estimator=SVC(), n_estimators=100))  # BaggingClassifier with SVM base estimator
     ]
 
   elif classifier == 'GradientBoostingClassifier':
     steps = [
-    ('scaler', StandardScaler() if feature_scaling == 1 else None),  # Scale the features
+    ('scaler', StandardScaler()),  # Scale the features
     ('classifier', GradientBoostingClassifier(n_estimators=100))     # Boosting Classifier with SVM base estimator
     ]
         
@@ -60,7 +61,7 @@ def perform_grid_search(X_train, y_train, pipeline, k, classifier):
     param_grid = {
         'classifier__estimator__C': [10],
         'classifier__estimator__kernel': [ 'rbf'],
-        'classifier__n_estimators': [200]
+        'classifier__n_estimators': [100]
     }
     
   elif classifier == 'GradientBoostingClassifier':
@@ -98,7 +99,7 @@ if __name__ == "__main__":
       pipe = create_pipeline(classifier)
       best_classifier = perform_grid_search(x_train, y_train, pipe, k, classifier)
 
-       file_name=f'{classifier}_k{k}_exp'
+      file_name=f'{classifier}_k{k}_exp'
       
 
       with open(file_name, 'wb') as file:

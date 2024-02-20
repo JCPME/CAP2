@@ -15,20 +15,20 @@ from imblearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import pickle
+from pathlib import Path
 
 def load_data():
-   
-    # read data
-  try:
-    data = pd.read_excel(r'C:\Users\Julien\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None)
-  except: 
-    data = pd.read_excel(r'C:\Users\Mögu\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None) 
- 
+  # read data 
+  root_dir = Path(__file__).resolve().parent
+  
+  data = pd.read_excel(f'{root_dir}/data/metadata.xls', header=None)
+  
   # read data 
   X = data.iloc[1:, 1:16]
   y = data.iloc[1:, 18]
   return(X,y)
 
+#resampling
 def resample_smt(X,y):
   smt = SMOTETomek(random_state=42)
   X_res, y_res = smt.fit_resample(X, y)
@@ -37,15 +37,13 @@ def resample_smt(X,y):
 def create_pipeline():
   # Define the pipeline
     steps = [
-        ('scaler', StandardScaler() if feature_scaling == 1 else None ),  # Scale the features
+        ('scaler', StandardScaler()),  # Scale the features
         ('classifier', XGBClassifier(objective='multi:softmax'))  # BaggingClassifier with SVM base estimator
     ]
-        
     pipeline = Pipeline(steps)
     return pipeline
 
 def perform_grid_search(X_train, y_train, pipeline, k):
-
     # Define hyperparameters to tune
     param_grid = {
     'classifier__n_estimators': [400],
@@ -55,7 +53,7 @@ def perform_grid_search(X_train, y_train, pipeline, k):
     }
 
     # Create GridSearchCV object
-    grid_search = BayesSearchCV(pipeline, param_grid, cv=k, scoring=['accuracy', 'f1_macro', 'matthews_corrcoef'], n_jobs=-1, refit = 'accuracy', verbose=2)
+    grid_search = GridSearchCV(pipeline, param_grid, cv=k, scoring=['accuracy', 'f1_macro', 'matthews_corrcoef'], n_jobs=-1, refit = 'accuracy', verbose=2)
 
     # Fit the grid search to the data
     grid_search.fit(X_train, y_train)
@@ -66,7 +64,6 @@ def perform_grid_search(X_train, y_train, pipeline, k):
 
 
 if __name__ == "__main__":
-  
   X,y = load_data()
 
   label_enc = preprocessing.LabelEncoder()
@@ -76,7 +73,6 @@ if __name__ == "__main__":
 
   list_of_ks = [10]
   
-   
   # Perform grid search and get the best classifier
   for k in list_of_ks:
     pipe = create_pipeline()
@@ -85,13 +81,14 @@ if __name__ == "__main__":
     #print feature importances
     print(best_classifier.best_estimator_.named_steps['classifier'].feature_importances_)
 
+    file_name = 'classifier.txt'
+    #store classifier
     with open(file_name, 'wb') as file:
       pickle.dump(best_classifier, file)
 
     df = pd.DataFrame(best_classifier.cv_results_)
 
     # Specify the Excel file path
-
     excel_file_path = f'cv_results_k{k}_xgb_exp.xlsx'
 
     with pd.ExcelWriter(excel_file_path) as writer:

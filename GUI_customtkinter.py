@@ -17,18 +17,17 @@ import pickle
 from sklearn.model_selection import train_test_split
 from PIL import Image
 
-
-
-
+#class for the plotting frame
 class Frame_Plot(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
         self.profile = master.profile
+        #define fonts
         self.font = ctk.CTkFont(family="calibri", size=20)
-
-        logo_eth = ctk.CTkImage(light_image=Image.open(f'{root_dir}\\data\\logo.png'),
-                                  dark_image=Image.open(f'{root_dir}\\data\\logo.png'),
+        #define logo
+        logo_eth = ctk.CTkImage(light_image=Image.open(f'{root_dir}/data/logo.png'),
+                                  dark_image=Image.open(f'{root_dir}/data/logo.png'),
                                   size=(250, 40))
         
         self.label_eth = ctk.CTkLabel(master = self, image=logo_eth, text = None, )
@@ -64,7 +63,7 @@ class Frame_Plot(ctk.CTkFrame):
         self.Label_exp = None
         self.Label_exp_pred = None
 
-       
+    #function that predicts the years of experience 
     def predict1(self):
         experience_predictor = self.master.experience_predictor
         input = np.array(self.profile.M).reshape(1,-1)[:,:-1]
@@ -75,7 +74,6 @@ class Frame_Plot(ctk.CTkFrame):
         self.Label_exp = ctk.CTkLabel(master = self, text= f'Actual Experience:{"not available" if self.profile.experience == None else self.profile.experience}', font=self.font)
 
         self.Label_exp_pred.grid(row = 8, column = 0, padx = 0, pady = 0)
-        
         self.Label_exp.grid(row = 10, column = 0, padx = 20, pady = 20)
     
 
@@ -162,7 +160,6 @@ class App(ctk.CTk):
     
 #class for the force time profile
 class Profile:
-
     def __init__(self, file_path = None, features = pd.DataFrame, A = pd.DataFrame, M = pd.DataFrame, N = pd.DataFrame,df = pd.DataFrame):
         self.A = A  #holds sensor data
         self.M = M  #helper matrix
@@ -176,7 +173,7 @@ class Profile:
         self.metadata = None
         self.day = None
         
-        
+    #reset profile  
     def reset(self):
         self.A = pd.DataFrame
         self.M = pd.DataFrame
@@ -200,6 +197,7 @@ class Frame_features(ctk.CTkFrame):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
 
+#function that plots the table for the features
 def plot_values():
     data = profile.features.values.tolist()
 
@@ -215,12 +213,8 @@ def load_classifier(filename):
 
 def load_metadata(fn, day):
   if fn is not None or day is not None:
-        # read data 
-    try:
-        data = pd.read_excel(f'{root_dir}\\data\\metadata.xls', header=None)
-    except: 
-        data = pd.read_excel(r'C:\Users\Mögu\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None) 
-    
+     # read data 
+    data = pd.read_excel(f'/data/metadata.xls', header=None)
     try:
         selected_rows = data[(data.iloc[:, 0] == fn) & (data.iloc[:, 24] == eval(day))]
         X = selected_rows.iloc[:, 18:23]
@@ -233,9 +227,9 @@ def load_metadata(fn, day):
   else:
       profile.experience = None
       return None
-    
+
+#import the sensor data from the fgt file
 def import_data():
-  
     file_path = profile.file_path
 
     print(f"Accessing file: {file_path}")
@@ -252,6 +246,7 @@ def import_data():
 
         return pd.DataFrame()  # You can return None or raise an exception here as appropriate
 
+#calculate extra info
 def extraInfo(timeT3, timeT2, data, indexT2, indexT3):
     thrust_duration = np.round(timeT3 - timeT2,2)
     new_vec = data.loc[indexT2:indexT3, 'Force']
@@ -263,7 +258,6 @@ def extraInfo(timeT3, timeT2, data, indexT2, indexT3):
 
 # Define a function to plot data
 def plot_data():
-
     header = ['T0(s)', 'T0(N)', 'T1(s)', 'T1(N)', 'T2(s)', 'T2(N)', 'T3(s)', 'T3(N)',
           'T4(s)', 'T4(N)', 'Thrust Duration(s)', 'Avg. Thrust Speed(N/s)', 'Max. Thrust Speed(N/s)',
           'Preload Dosage(N*s)', 'Thrust Dosage(N*s)', 'Total Dosage(N*s)', 'DIP']
@@ -307,7 +301,7 @@ def plot_data():
     canvas = FigureCanvasTkAgg(plt.gcf(), master=app.Frame_Data)
     canvas.get_tk_widget().grid()
 
-
+#calculate T0 to T4
 def findPoints(data):
     indexT0 = -1
     # Force, time, and index of T3
@@ -379,9 +373,9 @@ def findPoints(data):
 
 
 if __name__ == "__main__":
-    root_dir = Path(__file__).resolve().parent.parent
+    root_dir = Path(__file__).resolve().parent
 
-    classifier_exp = load_classifier(f'{root_dir}\\data\\classifier.txt')
+    classifier_exp = load_classifier(f'{root_dir}/data/classifier.txt')
 
     profile = Profile()
 

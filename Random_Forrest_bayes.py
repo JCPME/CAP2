@@ -15,16 +15,13 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 import pickle
+from pathlib import Path
 
 def load_data():
-   
-    # read data 
-  try:
-    data = pd.read_excel(r'C:\Users\Julien\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None)
-  except: 
-    data = pd.read_excel(r'C:\Users\Mögu\OneDrive\ETH\BScThesis\03_Thesis_Valentina\automatic_detection.xls', header=None) 
- 
+  root_dir = Path(__file__).resolve().parent
   # read data 
+  data = pd.read_excel(f'{root_dir}/data/metadata.xls', header=None)
+
   X = data.iloc[1:, 1:16]
   y = data.iloc[1:, 18]
   return(X,y)
@@ -38,13 +35,14 @@ def create_pipeline():
 
   # Define the pipeline
     steps = [
-        ('scaler', StandardScaler() if feature_scaling == 1 else None ),  # Scale the features
+        ('scaler', StandardScaler()),  # Scale the features
         ('classifier', RandomForestClassifier())                          # BaggingClassifier with SVM base estimator
     ]
         
     pipeline = Pipeline(steps)
     return pipeline
 
+#perform grid search
 def perform_grid_search(X_train, y_train, pipeline, k):
 
     # Define hyperparameters to tune
@@ -58,11 +56,8 @@ def perform_grid_search(X_train, y_train, pipeline, k):
       'classifier__max_samples' : [0.1,0.5,1]
     }
    
-
-    
-
     # Create GridSearchCV object
-    grid_search = BayesSearchCV(pipeline, param_grid, cv=k, scoring=['accuracy', 'f1_macro', 'matthews_corrcoef'], n_jobs=-1, refit = 'accuracy', verbose=2)
+    grid_search = GridSearchCV(pipeline, param_grid, cv=k, scoring=['accuracy', 'f1_macro', 'matthews_corrcoef'], n_jobs=-1, refit = 'accuracy', verbose=2)
 
     # Fit the grid search to the data
     grid_search.fit(X_train, y_train)
@@ -77,6 +72,7 @@ if __name__ == "__main__":
   X,y = load_data()
 
   label_enc = preprocessing.LabelEncoder()
+  #encode labels
   y = label_enc.fit_transform(y)
 
   x_train, x_test,y_train,y_test = train_test_split(X,y, test_size=0.1, shuffle = True, random_state=42 )
@@ -88,11 +84,8 @@ if __name__ == "__main__":
   for k in list_of_ks:
     pipe = create_pipeline()
     best_classifier = perform_grid_search(x_train, y_train, pipe, k)
-
-
     file_name=f'xgb_k{k}_exp'
-    
-
+    #store classifier
     with open(file_name, 'wb') as file:
       pickle.dump(best_classifier, file)
 
