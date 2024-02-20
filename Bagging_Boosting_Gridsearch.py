@@ -60,7 +60,7 @@ def perform_grid_search(X_train, y_train, pipeline, k, classifier):
     param_grid = {
         'classifier__estimator__C': [10],
         'classifier__estimator__kernel': [ 'rbf'],
-        'classifier__n_estimators': [100]
+        'classifier__n_estimators': [200]
     }
     
   elif classifier == 'GradientBoostingClassifier':
