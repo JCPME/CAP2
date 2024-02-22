@@ -8,3 +8,4 @@ This is the Github repo for the cap2 machine learning scripts. It has 3 python s
 
 To run the scripts you need to install the python packages in the requierements.txt file.
 If you run the scripts it will create a excel file with the cv results and a txt file that stores the best classifier.
+dfd
